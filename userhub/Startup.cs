@@ -17,7 +17,10 @@ using Microsoft.IdentityModel.Tokens;
 using Genesis.idlib.Data;
 using Genesis.idlib.Models;
 
+using userhub.Infrastructure.Services;
+
 using IdentityModel;
+
 
 namespace userhub
 {
@@ -48,6 +51,9 @@ namespace userhub
                 .AddDefaultTokenProviders(); 
 
             services.AddMvc();
+
+            //add application services
+            services.AddTransient<IModelDataService,ModelDataService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
