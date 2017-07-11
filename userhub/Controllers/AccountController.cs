@@ -1,15 +1,16 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.Extensions.Logging;
 
 using Genesis.idlib.Models;
-using userhub.Models;
+
 using userhub.Infrastructure.Extensions;
 using userhub.Infrastructure.Services;
+using userhub.Models;
+
 
 namespace userhub.Controllers
 {
@@ -18,11 +19,12 @@ namespace userhub.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-
         private readonly IModelDataService _modelDataSvc;
         private readonly ILogger _logger;
 
-        public AccountController(UserManager<ApplicationUser> userManager,
+
+        public AccountController(
+                                UserManager<ApplicationUser> userManager,
                                 SignInManager<ApplicationUser> signInManager,
                                 IModelDataService modelDataSvc,
                                 ILoggerFactory loggerFactory)
@@ -34,7 +36,7 @@ namespace userhub.Controllers
         }
 
         [HttpGet]
-        //[AllowAnonymous]
+        [Authorize(Policy="AdminOnly")]
         public IActionResult Register(string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -47,7 +49,7 @@ namespace userhub.Controllers
         //
         // POST: /Account/Register
         [HttpPost]
-        //[AllowAnonymous]
+        [Authorize(Policy="AdminOnly")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
@@ -166,6 +168,12 @@ namespace userhub.Controllers
             return View();
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        public IActionResult Logout()
+        {
+            return new SignOutResult(new string[]{ "oidc", "Cookies" });
+        }        
 
         private void AddErrors(IdentityResult result)
         {

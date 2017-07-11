@@ -10,6 +10,7 @@ namespace userhub.Controllers
     {
         public IActionResult Index()
         {
+            //var claims = this.User.Claims;
             return View();
         }
 

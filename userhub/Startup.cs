@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 //using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -52,6 +49,10 @@ namespace userhub
 
             services.AddMvc();
 
+            services.AddAuthorization(options => {
+                options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role","Poseidon"));
+            });
+
             //add application services
             services.AddTransient<IModelDataService,ModelDataService>();
         }
@@ -74,7 +75,6 @@ namespace userhub
 
             app.UseStaticFiles();
 
-            //is this required?
             app.UseIdentity();
 
             #region beforeMVC
@@ -85,7 +85,7 @@ namespace userhub
                 ExpireTimeSpan = TimeSpan.FromMinutes(60)
             });
 
-            
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions{
                 AuthenticationScheme = "oidc",
@@ -95,7 +95,7 @@ namespace userhub
                 ClientId = "userhub",
                 //ClientSecret = "secret",
                 ResponseType = "id_token", //"code id_token"
-                Scope = {"openid","profile","email"},
+                Scope = {"openid","profile","email","role"},
                 GetClaimsFromUserInfoEndpoint = true,
                 SaveTokens = true,
 
