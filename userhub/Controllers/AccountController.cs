@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using Genesis.idlib.Models;
 
 using userhub.Infrastructure.Extensions;
 using userhub.Infrastructure.Services;
+using userhub.Infrastructure.Mappers;
 using userhub.Models;
 
 
@@ -41,7 +43,7 @@ namespace userhub.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            GetRegisterVMData();
+            GeExternalVMData();
 
             return View();
         }
@@ -56,7 +58,8 @@ namespace userhub.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FirstName = model.FirstName,
+                                                LastName = model.LastName, CompanyId = model.CompanyId };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -73,7 +76,7 @@ namespace userhub.Controllers
                 AddErrors(result);
             }
 
-            GetRegisterVMData();
+            GeExternalVMData();
             // If we got this far, something failed, redisplay form
             return View(model);
         }
@@ -173,7 +176,65 @@ namespace userhub.Controllers
         public IActionResult Logout()
         {
             return new SignOutResult(new string[]{ "oidc", "Cookies" });
-        }        
+        }
+
+        [HttpGet]        
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string returnUrl)
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize(Policy="AdminOnly")]
+        public async Task<IActionResult> EditUser(long id)
+        {
+            var usr =  await _userManager.FindByIdAsync(id.ToString());
+            if(usr!=null)
+            {
+                var editUsrVM = usr.MapToEditUserViewModel();
+
+                GeExternalVMData();
+                
+                return View(editUsrVM);
+            }
+           
+            ModelState.AddModelError("","User was not found");
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy="AdminOnly")]
+        public async Task<IActionResult> EditUser(EditUserViewModel editUserVM)
+        {
+            var usr = await _userManager.FindByIdAsync(editUserVM.Id.ToString());
+
+            if (ModelState.IsValid && usr!=null)
+            {                
+                usr.FirstName = editUserVM.FirstName;
+                usr.LastName = editUserVM.LastName;
+                usr.CompanyId = editUserVM.CompanyId;
+                usr.PhoneNumber = editUserVM.PhoneNumber;
+                var result = await _userManager.UpdateAsync(usr);
+
+                if(result.Succeeded)
+                    return RedirectToAction(nameof(UserList));
+                else
+                    AddErrors(result);
+            }
+
+            return View(editUserVM);
+        }
+
+        [HttpGet]
+        [Authorize(Policy="AdminOnly")]
+        public IActionResult UserList()
+        {
+            var usrListVM = new List<UserRowViewModel>();
+            return View(usrListVM);
+        }
 
         private void AddErrors(IdentityResult result)
         {
@@ -195,7 +256,7 @@ namespace userhub.Controllers
             }
         }
 
-        private void GetRegisterVMData()
+        private void GeExternalVMData()
         {
             var CompanyList = _modelDataSvc.GetCompanies();
             ViewBag.CompanyList = CompanyList.ConvertList("CompanyName","CompanyId");
