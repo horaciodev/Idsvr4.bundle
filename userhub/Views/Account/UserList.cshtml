@@ -9,10 +9,22 @@
 
                 <table id="tblUsers" class="table table-bordered table-stripped">
                     <thead>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Company</th>
-                        <th>Active</th>
+                        <th>
+                            <a asp-action="UserList" 
+                            asp-route-sortBy="@ViewData["FirstNameSort"]">First Name</a>
+                        </th>
+                        <th>
+                            <a asp-action="UserList"
+                            asp-route-sortBy="@ViewData["LastNameSort"]">Last Name</a>
+                        </th>
+                        <th>
+                            <a asp-action="UserList"
+                            asp-route-sortBy="@ViewData["CompanySort"]">Company</a>    
+                        </th>
+                        <th>
+                            <a asp-action="UserList"
+                            asp-route-sortBy="@ViewData["ActiveSort"]">Active</a>
+                        </th>
                         <th>Edit</th>
                     </thead>
                     <tbody>

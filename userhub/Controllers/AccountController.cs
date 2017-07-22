@@ -7,12 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using Genesis.idlib.Models;
+using Genesis.idlib.Services;
 
 using userhub.Infrastructure.Extensions;
 using userhub.Infrastructure.Services;
 using userhub.Infrastructure.Mappers;
 using userhub.Models;
-
+using Genesis.idlib.Data;
+using System;
+using Genesis.idlib.RequestObjects;
 
 namespace userhub.Controllers
 {
@@ -24,16 +27,19 @@ namespace userhub.Controllers
         private readonly IModelDataService _modelDataSvc;
         private readonly ILogger _logger;
 
+        private readonly IUserDataService _usrDataSvc;
 
         public AccountController(
                                 UserManager<ApplicationUser> userManager,
                                 SignInManager<ApplicationUser> signInManager,
                                 IModelDataService modelDataSvc,
-                                ILoggerFactory loggerFactory)
+                                ILoggerFactory loggerFactory,
+                                IUserDataService usrDataSvc )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _modelDataSvc = modelDataSvc;
+            _usrDataSvc = usrDataSvc;
             _logger = loggerFactory.CreateLogger<AccountController>();
         }
 
@@ -230,11 +236,70 @@ namespace userhub.Controllers
 
         [HttpGet]
         [Authorize(Policy="AdminOnly")]
-        public IActionResult UserList()
+        public IActionResult UserList(int pageNum,int sortBy)
         {
-            var usrListVM = new List<UserRowViewModel>();
+            var usrPageReq = BuildUserPageRequest(pageNum,DecodeSort(sortBy));
+            var usrPagedList = _usrDataSvc.GetUsersPage(usrPageReq);
+            var usrListVM = usrPagedList.ItemList.ConverToUserRowVMList();
             return View(usrListVM);
         }
+
+        private DataItemPageRequest BuildUserPageRequest(int pageNum, int sortBy)
+        {
+            var itemPageReq = new DataItemPageRequest();
+            
+            itemPageReq.PageNumber = (pageNum <= 0) ? 1 : pageNum;
+            itemPageReq.PageSize = 10;
+            itemPageReq.SortBy = (sortBy ==0) ? 1: sortBy;
+
+            return itemPageReq;
+        }
+
+        private void InitSort(int sortBy)
+        {
+            if(sortBy == 0)
+                InitViewData();
+        }
+
+        private void InitViewData()
+        {
+            ViewData["FirstNameSort"] = "3";
+            ViewData["LastNameSort"] = "4";
+            ViewData["CompanySort"] = "6";
+            ViewData["ActiveSort"] = "7";
+        }
+
+        private int DecodeSort(int sortBy)
+        {   
+            InitSort(sortBy);
+            if(sortBy == 0) return 3;
+
+            int newSort;
+
+            if(sortBy == 0 || Math.Abs(sortBy) > 4) return 3;            
+
+            newSort = sortBy*(-1);
+            InitViewData();
+
+            switch(Math.Abs(sortBy))
+            {
+                case 3:
+                        ViewData["FirstNameSort"] = newSort;
+                        break;
+                case 4: 
+                        ViewData["LastNameSort"] = newSort;
+                        break;
+                case 6:
+                        ViewData["CompanySort"] = newSort;
+                        break;
+                case 7:
+                        ViewData["Activesort"] = newSort;
+                        break;                        
+            }
+
+            return newSort;
+        }
+        
 
         private void AddErrors(IdentityResult result)
         {

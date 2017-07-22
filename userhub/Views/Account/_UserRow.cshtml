@@ -4,5 +4,9 @@
     <td>@Model.LastName</td>
     <td>@Model.Company</td>
     <td>@Model.Active</td>
-    <td>Edit</td>
+    <td>
+        <a asp-action="EditUser" asp-route-id="@Model.Id">
+            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        </a>
+    </td>
 </tr>    

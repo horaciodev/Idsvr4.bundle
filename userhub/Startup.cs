@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 
 using Genesis.idlib.Data;
 using Genesis.idlib.Models;
+using Genesis.idlib.Repositories;
+using Genesis.idlib.Services;
 
 using userhub.Infrastructure.Services;
 
@@ -55,6 +57,11 @@ namespace userhub
 
             //add application services
             services.AddTransient<IModelDataService,ModelDataService>();
+            services.AddTransient<IUserDataService, UserDataService>();
+            services.AddTransient<IUserRepository, UserRepository>(svcProvider =>{
+                return new UserRepository(sqlConnStr);
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
