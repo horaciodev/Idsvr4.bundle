@@ -1,4 +1,4 @@
-@model IList<UserRowViewModel>
+@model CompositeUserPagedModel
 <div class="container">
     <div class="row">
 
@@ -28,15 +28,15 @@
                         <th>Edit</th>
                     </thead>
                     <tbody>
-                        @foreach(var usrItem in Model)
+                        @foreach(var usrItem in Model.UserRowList)
                         {
                             @Html.Partial("_UserRow",usrItem);
                         }
                     </tbody>    
                         
                 </table>                
-
-            </div>                
+            </div> 
+            @Html.Partial("_pagerPartial",Model.PaginationInfo)            
         </div>    
 
     </div>    

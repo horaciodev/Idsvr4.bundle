@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ using userhub.Infrastructure.Services;
 using userhub.Infrastructure.Mappers;
 using userhub.Models;
 using Genesis.idlib.Data;
-using System;
+
 using Genesis.idlib.RequestObjects;
 
 namespace userhub.Controllers
@@ -240,8 +241,12 @@ namespace userhub.Controllers
         {
             var usrPageReq = BuildUserPageRequest(pageNum,DecodeSort(sortBy));
             var usrPagedList = _usrDataSvc.GetUsersPage(usrPageReq);
-            var usrListVM = usrPagedList.ItemList.ConverToUserRowVMList();
-            return View(usrListVM);
+            var urlBaseRoute = Url.Link("Default", new { controller = RouteData.Values["controller"], action = RouteData.Values["action"]});
+            var usrPagedModel = new CompositeUserPagedModel{
+                UserRowList = usrPagedList.ItemList.ConverToUserRowVMList(),
+                PaginationInfo = usrPagedList.PagedListInfo.MapToPagerModel(urlBaseRoute,sortBy,"sortBy")
+            };
+            return View(usrPagedModel);
         }
 
         private DataItemPageRequest BuildUserPageRequest(int pageNum, int sortBy)
@@ -249,8 +254,8 @@ namespace userhub.Controllers
             var itemPageReq = new DataItemPageRequest();
             
             itemPageReq.PageNumber = (pageNum <= 0) ? 1 : pageNum;
-            itemPageReq.PageSize = 10;
-            itemPageReq.SortBy = (sortBy ==0) ? 1: sortBy;
+            itemPageReq.PageSize = 2;
+            itemPageReq.SortBy = (sortBy ==0) ? 3 : sortBy;
 
             return itemPageReq;
         }
