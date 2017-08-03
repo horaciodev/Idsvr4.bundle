@@ -9,8 +9,8 @@ namespace userhub.Infrastructure.Extensions
     public static class SelectListConverter{
 
         public static List<SelectListItem> ConvertList<T>(this IList<T> sourceList, string textField, string valueField) where T: class
-        {
-            Type sourceType = sourceList[0].GetType(); //is this the right way to do this? what of the list is empty
+        {            
+            Type sourceType = typeof(T);
             PropertyInfo textProp = sourceType.GetProperty(textField);
             PropertyInfo valueProp = sourceType.GetProperty(valueField);
 
