@@ -2,7 +2,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-//using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +15,7 @@ using Genesis.idlib.Models;
 using Genesis.idlib.Repositories;
 using Genesis.idlib.Services;
 
+using userhub.Infrastructure;
 using userhub.Infrastructure.Services;
 
 using IdentityModel;
@@ -29,7 +29,7 @@ namespace userhub
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
@@ -51,6 +51,8 @@ namespace userhub
 
             services.AddMvc();
 
+            services.AddOptions();
+
             services.AddAuthorization(options => {
                 options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role","Poseidon"));
             });
@@ -61,6 +63,7 @@ namespace userhub
             services.AddTransient<IUserRepository, UserRepository>(svcProvider =>{
                 return new UserRepository(sqlConnStr);
             });
+            services.Configure<ConfigAppSettings>(Configuration.GetSection("ConfigAppSettings"));
 
         }
 

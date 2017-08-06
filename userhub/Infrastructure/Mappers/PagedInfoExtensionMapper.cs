@@ -7,13 +7,11 @@ namespace userhub.Infrastructure.Mappers
     {
         public static PagerModel MapToPagerModel(this PagedInfo pagedInfo, string baseUrl, int sortBy, string sortParam)
         {
-            var retPagerModel = new PagerModel();
-            
-            retPagerModel.BaseTargetUrl = baseUrl;
-            retPagerModel.CurrentPage = pagedInfo.CurrentPage;
-            retPagerModel.SortBy = sortBy;
-            retPagerModel.SortParam = sortParam;
-            retPagerModel.TotalPages = pagedInfo.TotalPages;
+            var retPagerModel = new PagerModel(baseUrl,
+                                                pagedInfo.CurrentPage,
+                                                sortBy,
+                                                sortParam,
+                                                pagedInfo.TotalPages);                      
 
             return retPagerModel;
         }

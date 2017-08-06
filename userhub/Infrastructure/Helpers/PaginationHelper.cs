@@ -25,8 +25,8 @@ namespace userhub.Infrastructure.Helpers
                                 pagerModel.SortParam,
                                 PagerNavigationType.Previous,
                                 pagerModel.PrevPageEnabled));
-
-            for(int i=1;i<= pagerModel.TotalPages; i++)
+            
+            for(int i=pagerModel.StartPagerAtPage;i<= pagerModel.UpperLimit; i++)
             {                  
                                 
                 ulBuilder.InnerHtml.AppendHtml(B3Page(i,pagerModel.BaseTargetUrl,pagerModel.SortBy, pagerModel.SortParam,

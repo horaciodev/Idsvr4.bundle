@@ -15,12 +15,7 @@ namespace userhubTest.Infrastructure.Helpers
         public void B3Pager_Returns_Pager_As_IHtmlContent_Object()
         {
             //arrange
-            var pagerModel = new PagerModel();
-            pagerModel.TotalPages = 3;
-            pagerModel.CurrentPage = 1;
-            pagerModel.SortBy = 1;
-            pagerModel.SortParam = "SortBy";
-            pagerModel.BaseTargetUrl = "http://localhost/";
+            var pagerModel = new PagerModel("http://localhost/",1,1,"SortBy",3);
             //act
             var result = PaginationHelper.B3Pager(pagerModel);
             //result

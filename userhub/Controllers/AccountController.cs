@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Genesis.idlib.Models;
 using Genesis.idlib.Services;
 
+using userhub.Infrastructure;
 using userhub.Infrastructure.Extensions;
 using userhub.Infrastructure.Services;
 using userhub.Infrastructure.Mappers;
@@ -30,17 +32,21 @@ namespace userhub.Controllers
 
         private readonly IUserDataService _usrDataSvc;
 
+        private ConfigAppSettings _configAppSettings;
+
         public AccountController(
                                 UserManager<ApplicationUser> userManager,
                                 SignInManager<ApplicationUser> signInManager,
                                 IModelDataService modelDataSvc,
                                 ILoggerFactory loggerFactory,
-                                IUserDataService usrDataSvc )
+                                IUserDataService usrDataSvc,
+                                IOptions<ConfigAppSettings> configAppSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _modelDataSvc = modelDataSvc;
             _usrDataSvc = usrDataSvc;
+            _configAppSettings = configAppSettings.Value;
             _logger = loggerFactory.CreateLogger<AccountController>();
         }
 
@@ -239,7 +245,7 @@ namespace userhub.Controllers
         [Authorize(Policy="AdminOnly")]
         public IActionResult UserList(int pageNum,int sortBy)
         {
-            var usrPageReq = BuildUserPageRequest(pageNum,DecodeSort(sortBy));
+            var usrPageReq = BuildUserPageRequest(pageNum,DecodeSort(sortBy),_configAppSettings.UserTablePageSize);
             var usrPagedList = _usrDataSvc.GetUsersPage(usrPageReq);
             var urlBaseRoute = Url.Link("Default", new { controller = RouteData.Values["controller"], action = RouteData.Values["action"]});
             var usrPagedModel = new CompositeUserPagedModel{
@@ -249,12 +255,12 @@ namespace userhub.Controllers
             return View(usrPagedModel);
         }
 
-        private DataItemPageRequest BuildUserPageRequest(int pageNum, int sortBy)
+        private DataItemPageRequest BuildUserPageRequest(int pageNum, int sortBy,int pageSize)
         {
             var itemPageReq = new DataItemPageRequest();
             
             itemPageReq.PageNumber = (pageNum <= 0) ? 1 : pageNum;
-            itemPageReq.PageSize = 2;
+            itemPageReq.PageSize = pageSize;
             itemPageReq.SortBy = (sortBy ==0) ? 3 : sortBy;
 
             return itemPageReq;
