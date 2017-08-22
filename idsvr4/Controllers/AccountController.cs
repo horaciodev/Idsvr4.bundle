@@ -89,8 +89,13 @@ namespace idsvr4.Controllers
 
             
             var vm = await _account.BuildLoginViewModelAsync(model);
+
+            var returnUrl = model.ReturnUrl == null ? null  : model.ReturnUrl;
             
-            return View(vm);
+            if(returnUrl == null)
+                return View(vm);
+
+             return RedirectToAction("Login", new { returnUrl });   
         }
 
         /// <summary>
