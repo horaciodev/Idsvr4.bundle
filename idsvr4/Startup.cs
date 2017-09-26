@@ -66,6 +66,34 @@ namespace idsvr4
                 .AddAspNetIdentity<ApplicationUser>();
         }
 
+        public void ConfigureDevelopmentServices(IServiceCollection services)
+        {
+             var sqlConnStr = Configuration.GetConnectionString("IdentityServer4DB");
+            // Add framework services.
+            services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(sqlConnStr));
+
+            services.AddIdentity<ApplicationUser,ApplicationRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext,long>()
+                .AddDefaultTokenProviders();
+
+            services.AddMvc();
+
+             //add application services
+            services.AddTransient<IProfileService, IdentityClaimsProfileService>();
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+
+             //add Identity Server4
+            services.AddIdentityServer()
+                .AddSigningCredential(LoadCertFromStore(true))
+                .AddConfigurationStore(builder => 
+                    builder.UseSqlServer(sqlConnStr))
+                .AddOperationalStore(builder =>
+                    builder.UseSqlServer(sqlConnStr))                  
+                .AddAspNetIdentity<ApplicationUser>();
+        }
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -96,14 +124,17 @@ namespace idsvr4
             });
         }
 
-        private X509Certificate2 LoadCertFromStore()
+        private X509Certificate2 LoadCertFromStore(bool isDevelopment=false)
         {
             X509Certificate2 x509Cert = null;
             X509Store certStore = null; 
 
             try
             {
-                certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+                if(!isDevelopment)
+                    certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+                else
+                    certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
                 var idSvr4ConfigSettings = Configuration.GetSection("IdSrv4Settings");
                 var certThumbPrint = idSvr4ConfigSettings.GetValue<string>("TokenSigningCertificateThumbPrint");
@@ -111,8 +142,6 @@ namespace idsvr4
                 certStore.Open(OpenFlags.ReadOnly);
 
                 var certCollection = certStore.Certificates.Find(X509FindType.FindByThumbprint, certThumbPrint, false);
-
-
 
                 if (0 == certCollection.Count)
                 {
@@ -123,14 +152,8 @@ namespace idsvr4
                 byte[] certBytes = certCollection[0].Export(X509ContentType.Pkcs12, certPwd);
 
                 x509Cert = new X509Certificate2(certBytes, certPwd
-                                                , X509KeyStorageFlags.MachineKeySet);
-
-                
-            }
-            //catch
-            //{
-            //    Log.Information("Failed to load certificate from store");
-            //}
+                                                , X509KeyStorageFlags.MachineKeySet);                
+            }            
             finally
             {
                 
