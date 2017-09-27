@@ -131,7 +131,7 @@ namespace idsvr4
 
             try
             {
-                if(!isDevelopment)
+                if(!isDevelopment) //Note Development environment is cloud development environment
                     certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
                 else
                     certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
@@ -147,12 +147,20 @@ namespace idsvr4
                 {
                     throw new Exception("No certificate was found containing specified thumbprint");
                 }
+
+                if(!isDevelopment)
+                {
                 string certPwd = idSvr4ConfigSettings.GetValue<string>("signing-certificate.password");
 
                 byte[] certBytes = certCollection[0].Export(X509ContentType.Pkcs12, certPwd);
 
                 x509Cert = new X509Certificate2(certBytes, certPwd
                                                 , X509KeyStorageFlags.MachineKeySet);                
+                }
+                else
+                {
+                    x509Cert = certCollection[0];
+                }
             }            
             finally
             {
