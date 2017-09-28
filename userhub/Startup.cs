@@ -97,10 +97,12 @@ namespace userhub
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
+            var authority = Configuration["OAuth2:Authority"];
+
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions{
                 AuthenticationScheme = "oidc",
                 SignInScheme = "Cookies",
-                Authority = "http://localhost:5000",
+                Authority = authority,
                 RequireHttpsMetadata = false,
                 ClientId = "userhub",
                 //ClientSecret = "secret",
