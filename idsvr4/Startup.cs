@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +72,10 @@ namespace idsvr4
         {
              var sqlConnStr = Configuration.GetConnectionString("IdentityServer4DB");
             // Add framework services.
+            services.Configure<MvcOptions>(options =>{
+                options.Filters.Add(new RequireHttpsAttribute());
+            });
+
             services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(sqlConnStr));
 
@@ -102,8 +108,10 @@ namespace idsvr4
 
             if (env.IsDevelopment())
             {
+                var options = new RewriteOptions().AddRedirectToHttps();
+                app.UseRewriter(options);
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
+                //app.UseBrowserLink();
             }
             else
             {
