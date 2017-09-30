@@ -2,6 +2,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,9 +66,40 @@ namespace userhub
                 return new UserRepository(sqlConnStr);
             });
             services.Configure<ConfigAppSettings>(Configuration.GetSection("ConfigAppSettings"));
-
         }
 
+        public void ConfigureDevelopmentServices(IServiceCollection services)
+        {
+            var sqlConnStr = Configuration.GetConnectionString("IdentityServer4DB");
+            
+            services.Configure<MvcOptions>(options =>{
+                options.Filters.Add(new RequireHttpsAttribute());
+            });
+           
+            // Add framework services.
+            services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(sqlConnStr));
+
+            services.AddIdentity<ApplicationUser,ApplicationRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext,long>()
+                .AddDefaultTokenProviders(); 
+
+            services.AddMvc();
+
+            services.AddOptions();
+
+            services.AddAuthorization(options => {
+                options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role","Poseidon"));
+            });
+
+            //add application services
+            services.AddTransient<IModelDataService,ModelDataService>();
+            services.AddTransient<IUserDataService, UserDataService>();
+            services.AddTransient<IUserRepository, UserRepository>(svcProvider =>{
+                return new UserRepository(sqlConnStr);
+            });
+            services.Configure<ConfigAppSettings>(Configuration.GetSection("ConfigAppSettings"));
+        }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -75,8 +108,10 @@ namespace userhub
 
             if (env.IsDevelopment())
             {
+                var options = new RewriteOptions().AddRedirectToHttps();
+                app.UseRewriter(options);
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
+                //app.UseBrowserLink();
             }
             else
             {
